@@ -89,12 +89,26 @@ const Login = () => {
                             <Globe className="w-8 h-8 text-blue-400" />
                         </div>
                     </div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">
-                        Adaptive Matrix Optimizer
-                    </h1>
-                    <p className="text-gray-400 text-sm mt-2">
+                    <h1 className="text-2xl font-bold text-white tracking-tight">Adaptive Matrix Optimization</h1>
+                    <h3 className="text-gray-400 font-light mt-2">Next-Generation Open-Loop Optimizer for Industrial Systems</h3>
+
+                    <div className="mt-6 text-left space-y-4">
+                        <p className="text-gray-200">
+                            <strong>Welcome to a future of predictable performance and aligned organizations.</strong>
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                            Upload your timeseries data and our advanced modeling and optimization engine will unlock unprecedented insights and recommendations.
+                        </p>
+                        <ul className="text-gray-400 text-sm space-y-2 list-none mt-4">
+                            <li><strong className="text-white">Machine Learning Modeling:</strong> Understand your process based on your data rather than a theoretical simulation.</li>
+                            <li><strong className="text-white">Data Privacy:</strong> We never store your data and we allow you to download all of the insights and models created based on your data. Data is processed locally, so we couldn't see it even if we wanted to.</li>
+                            <li><strong className="text-white">What-If & Real Time Optimization:</strong> Use our unique pipeline for optimizing processes to unlock more value from your processes.</li>
+                        </ul>
+                    </div>
+
+                    <p className="text-gray-500 text-xs mt-6 pt-4 border-t border-gray-700">
                         {step === 1
-                            ? "Sign in to access your workspace"
+                            ? "Please login below to access the application."
                             : "A secure verification code has been sent"}
                     </p>
                 </div>
