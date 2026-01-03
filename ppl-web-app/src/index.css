@@ -1,40 +1,16 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 :root {
   --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --color-text: #333;
-  --color-bg: #fff;
-  --color-border: #ccc;
-  --color-primary: #333;
 
-  /* Alarm Colors */
-  --color-alarm-hihi: #F29B9B;
-  /* Light Red */
-  --color-alarm-high: #EDF285;
-  /* Light Yellow */
-  --color-alarm-obj: #A8E6A3;
-  /* Light Green */
-  --color-alarm-low: #EDF285;
-  /* Light Yellow */
-  --color-alarm-lolo: #F29B9B;
-  /* Light Red */
+  /* Fallback Colors (Tailwind covers most) */
+  --color-bg: #0f1115;
+  --color-text: #e0e0e0;
 }
 
-/* Custom Utilities */
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
-* {
-  box-sizing: border-box;
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 body {

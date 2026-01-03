@@ -75,28 +75,33 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 font-sans">
-            <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <div className="min-h-screen w-full flex items-center justify-center bg-[#0f1115] font-sans relative overflow-hidden">
+            {/* Background Ambient Glow */}
+            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px]" />
+            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px]" />
+
+            <div className="w-full max-w-md bg-white/5 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white/10 relative z-10">
 
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="flex items-center justify-center mb-4">
-                        <Globe className="w-8 h-8 text-blue-500" />
-                        <h1 className="ml-3 text-xl font-semibold text-gray-900">
-                            Adaptive Matrix Optimizer
-                        </h1>
+                        <div className="p-3 bg-blue-600/20 rounded-xl border border-blue-500/30">
+                            <Globe className="w-8 h-8 text-blue-400" />
+                        </div>
                     </div>
-
-                    <p className="text-gray-500 text-sm">
+                    <h1 className="text-2xl font-bold text-white tracking-tight">
+                        Adaptive Matrix Optimizer
+                    </h1>
+                    <p className="text-gray-400 text-sm mt-2">
                         {step === 1
-                            ? "Sign in with your email"
-                            : "A secure verification code has been sent."}
+                            ? "Sign in to access your workspace"
+                            : "A secure verification code has been sent"}
                     </p>
                 </div>
 
                 {/* Error Display */}
                 {error && (
-                    <div className="mb-6 flex items-start p-4 rounded-lg bg-red-50 text-red-600 text-sm">
+                    <div className="mb-6 flex items-start p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                         <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
                         <span>{error}</span>
                     </div>
@@ -106,39 +111,42 @@ const Login = () => {
                 {step === 1 ? (
                     <form onSubmit={handleRequestCode} className="space-y-6">
                         <div className="space-y-2">
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Email
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+                                Email Address
                             </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                className="block w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors sm:text-sm"
-                                placeholder=""
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                disabled={loading}
-                            />
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+                                <input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    required
+                                    className="block w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-sm"
+                                    placeholder="name@company.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    disabled={loading}
+                                />
+                            </div>
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex items-center justify-center py-2.5 px-4 border border-transparent rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                            className="w-full flex items-center justify-center py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0f1115] focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-900/20"
                         >
                             {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                                "Log in / Sign up"
+                                "Continue with Email"
                             )}
                         </button>
                     </form>
                 ) : (
                     <form onSubmit={handleVerifyCode} className="space-y-6">
                         <div className="space-y-2">
-                            <label htmlFor="code" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="code" className="block text-sm font-medium text-gray-300">
                                 Verification Code
                             </label>
                             <input
@@ -148,7 +156,7 @@ const Login = () => {
                                 autoComplete="one-time-code"
                                 required
                                 maxLength={6}
-                                className="block w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-center font-mono text-lg tracking-[0.25em]"
+                                className="block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-center font-mono text-2xl tracking-[0.5em]"
                                 placeholder="······"
                                 value={code}
                                 onChange={(e) => setCode(e.target.value)}
@@ -159,30 +167,30 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex items-center justify-center py-2.5 px-4 border border-transparent rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                            className="w-full flex items-center justify-center py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0f1115] focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-900/20"
                         >
                             {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                                'Secure Login'
+                                'Verify & Login'
                             )}
                         </button>
 
-                        <div className="flex items-center justify-between text-sm pt-2">
+                        <div className="flex items-center justify-between text-sm pt-4 border-t border-white/5">
                             <button
                                 type="button"
                                 onClick={() => setStep(1)}
-                                className="text-gray-500 hover:text-gray-900 transition-colors"
+                                className="text-gray-400 hover:text-white transition-colors"
                             >
-                                ← Change email
+                                ← Back
                             </button>
                             <button
                                 type="button"
                                 onClick={handleResendCode}
                                 disabled={countdown > 0 || loading}
-                                className={`${countdown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-700 font-medium'} transition-colors`}
+                                className={`${countdown > 0 ? 'text-gray-500 cursor-not-allowed' : 'text-blue-400 hover:text-blue-300 font-medium'} transition-colors`}
                             >
-                                {countdown > 0 ? `Resend (${countdown}s)` : 'Resend code'}
+                                {countdown > 0 ? `Resend in ${countdown}s` : 'Resend code'}
                             </button>
                         </div>
                     </form>
