@@ -1,0 +1,27 @@
+# System
+.DS_Store
+.idea
+.vscode
+
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+**/.venv/
+**/.venv_arm/
+**/venv/
+**/env/
+.env
+
+# Streamlit
+**/.streamlit/secrets.toml
+
+# Node
+**/node_modules/
+npm-debug.log
+**/dist/
+
+# PPL Specific
+**/output/
+**/temp_uploaded.csv
+**/data/*.csv

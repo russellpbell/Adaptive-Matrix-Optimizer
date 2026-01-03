@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+tensorflow
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+lime
+scikit-image
+polar-sdk
+httpx

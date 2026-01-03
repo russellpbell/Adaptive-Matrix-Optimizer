@@ -1,0 +1,108 @@
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+}
+
+.subtitle {
+    color: #64748b;
+    font-size: 16px;
+    margin: 0;
+}
+
+.badges {
+    display: flex;
+    gap: 12px;
+}
+
+.badge {
+    background-color: #f1f5f9;
+    color: #475569;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-weight: 600;
+}
+
+.section {
+    margin-bottom: 40px;
+}
+
+.section h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16px;
+}
+
+.description {
+    color: #64748b;
+    margin-bottom: 24px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 8px;
+}
+
+.list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: #334155;
+}
+
+.list li {
+    padding: 6px 0;
+    border-bottom: 1px dashed #f1f5f9;
+}
+
+.vizContainer {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+.vizImage {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}

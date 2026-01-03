@@ -1,0 +1,79 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.title {
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin: 0;
+    color: #222;
+}
+
+.grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    align-items: center;
+    gap: 1rem;
+}
+
+.label {
+    font-style: italic;
+    color: #333;
+    font-weight: 500;
+}
+
+.inputWrapper {
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+}
+
+.input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    color: #444;
+    text-align: right;
+    padding-right: 0.5rem;
+    /* Added spacing for spinner arrows */
+}
+
+.input::placeholder {
+    color: #777;
+    font-style: italic;
+}
+
+/* Background Colors */
+.redBg {
+    background-color: var(--color-alarm-hihi);
+}
+
+.yellowBg {
+    background-color: var(--color-alarm-high);
+}
+
+.greenBg {
+    background-color: var(--color-alarm-obj);
+}
+
+.error {
+    border: 2px solid red;
+}
+
+.errorMsg {
+    color: red;
+    font-size: 0.8rem;
+    margin-left: 90px;
+    margin-top: -0.5rem;
+}

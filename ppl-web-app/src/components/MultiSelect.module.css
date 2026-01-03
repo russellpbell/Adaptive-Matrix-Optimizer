@@ -1,0 +1,85 @@
+.container {
+    width: 100%;
+    position: relative;
+}
+
+.tagsWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fcfcfc;
+    min-height: 46px;
+    align-items: center;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    cursor: text;
+}
+
+.tagsWrapper:focus-within {
+    border-color: #aaa;
+    background-color: #fff;
+}
+
+.tag {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background-color: #e0e0e0;
+    padding: 0.3rem 0.6rem;
+    border-radius: 16px;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.removeButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    color: #666;
+}
+
+.removeButton:hover {
+    color: #000;
+}
+
+.input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1rem;
+    min-width: 120px;
+    padding: 0.3rem;
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 20;
+    list-style: none;
+    padding: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.option {
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.option:hover {
+    background-color: #f5f5f5;
+}
