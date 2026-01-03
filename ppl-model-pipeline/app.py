@@ -51,15 +51,19 @@ st.set_page_config(page_title="Adaptive Matrix Optimization", layout="wide")
 
 from st_paywall import add_auth
 import st_paywall.aggregate_auth
+import st_paywall.stripe_auth
 
 # Monkey-patch to whitelist admin email
-original_is_active_subscriber = st_paywall.aggregate_auth.is_active_subscriber
+# We use stripe_auth as the source of truth for the original function
+original_is_active_subscriber = st_paywall.stripe_auth.is_active_subscriber
 
 def monkey_patched_is_active_subscriber(email):
     if email == "russellpaulbell@gmail.com":
         return True
     return original_is_active_subscriber(email)
 
+# Patch both locations to ensure the redirect uses our logic
+st_paywall.stripe_auth.is_active_subscriber = monkey_patched_is_active_subscriber
 st_paywall.aggregate_auth.is_active_subscriber = monkey_patched_is_active_subscriber
 
 # --- Marketing / Login Page Content ---
