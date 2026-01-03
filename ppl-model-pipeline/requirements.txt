@@ -15,4 +15,4 @@ shap
 streamlit>=1.35.0
 plotly>=5.22.0
 statsmodels
-st-paywall
+st-paywall==0.1.8
