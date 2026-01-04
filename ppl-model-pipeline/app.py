@@ -49,22 +49,39 @@ def apply_bad_data_rules(df, rules):
 
 st.set_page_config(page_title="Adaptive Matrix Optimization", layout="wide")
 
-from st_paywall import add_auth
-import st_paywall.aggregate_auth
-import st_paywall.stripe_auth
+try:
+    from st_paywall import add_auth
+    import st_paywall.aggregate_auth
+    import st_paywall.stripe_auth
 
-# Monkey-patch to whitelist admin email
-# We use stripe_auth as the source of truth for the original function
-original_is_active_subscriber = st_paywall.stripe_auth.is_active_subscriber
+    # Monkey-patch to whitelist admin email
+    # We use stripe_auth as the source of truth for the original function
+    original_is_active_subscriber = st_paywall.stripe_auth.is_active_subscriber
 
-def monkey_patched_is_active_subscriber(email):
-    if email == "russellpaulbell@gmail.com":
-        return True
-    return original_is_active_subscriber(email)
+    def monkey_patched_is_active_subscriber(email):
+        if email == "russellpaulbell@gmail.com":
+            return True
+        return original_is_active_subscriber(email)
 
-# Patch both locations to ensure the redirect uses our logic
-st_paywall.stripe_auth.is_active_subscriber = monkey_patched_is_active_subscriber
-st_paywall.aggregate_auth.is_active_subscriber = monkey_patched_is_active_subscriber
+    # Patch both locations to ensure the redirect uses our logic
+    st_paywall.stripe_auth.is_active_subscriber = monkey_patched_is_active_subscriber
+    st_paywall.aggregate_auth.is_active_subscriber = monkey_patched_is_active_subscriber
+
+except KeyError as e:
+    st.error("🚨 **Missing Secrets Configuration!** 🚨")
+    st.markdown(f"""
+    The application failed to load because a required secret is missing: `{e}`.
+    
+    **How to fix this on Streamlit Cloud:**
+    1. Go to your App Dashboard on Streamlit Cloud.
+    2. Click **Settings** (three dots) -> **Settings** -> **Secrets**.
+    3. Paste your valid `secrets.toml` content (Google Client ID, Stripe Keys, etc.).
+    4. Reboot the app.
+    """)
+    st.stop()
+except Exception as e:
+    st.error(f"An unexpected error occurred during authentication setup: {e}")
+    st.stop()
 
 # --- Marketing / Login Page Content ---
 intro_text = st.empty()
