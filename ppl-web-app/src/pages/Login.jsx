@@ -89,26 +89,12 @@ const Login = () => {
                             <Globe className="w-8 h-8 text-blue-400" />
                         </div>
                     </div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">Adaptive Matrix Optimization</h1>
-                    <h3 className="text-gray-400 font-light mt-2">Next-Generation Open-Loop Optimizer for Industrial Systems</h3>
-
-                    <div className="mt-6 text-left space-y-4">
-                        <p className="text-gray-200">
-                            <strong>Welcome to a future of predictable performance and aligned organizations.</strong>
-                        </p>
-                        <p className="text-gray-400 text-sm">
-                            Upload your timeseries data and our advanced modeling and optimization engine will unlock unprecedented insights and recommendations.
-                        </p>
-                        <ul className="text-gray-400 text-sm space-y-2 list-none mt-4">
-                            <li><strong className="text-white">Machine Learning Modeling:</strong> Understand your process based on your data rather than a theoretical simulation.</li>
-                            <li><strong className="text-white">Data Privacy:</strong> We never store your data and we allow you to download all of the insights and models created based on your data. Data is processed locally, so we couldn't see it even if we wanted to.</li>
-                            <li><strong className="text-white">What-If & Real Time Optimization:</strong> Use our unique pipeline for optimizing processes to unlock more value from your processes.</li>
-                        </ul>
-                    </div>
-
-                    <p className="text-gray-500 text-xs mt-6 pt-4 border-t border-gray-700">
+                    <h1 className="text-2xl font-bold text-white tracking-tight">
+                        Adaptive Matrix Optimizer
+                    </h1>
+                    <p className="text-gray-400 text-sm mt-2">
                         {step === 1
-                            ? "Please login below to access the application."
+                            ? "Sign in to access your workspace"
                             : "A secure verification code has been sent"}
                     </p>
                 </div>
@@ -121,94 +107,34 @@ const Login = () => {
                     </div>
                 )}
 
-                {/* Authentication Forms */}
-                {step === 1 ? (
-                    <form onSubmit={handleRequestCode} className="space-y-6">
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                                Email Address
-                            </label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    required
-                                    className="block w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-sm"
-                                    placeholder="name@company.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    disabled={loading}
-                                />
-                            </div>
-                        </div>
+                {/* Simple Entry */}
+                <div className="space-y-6">
+                    <button
+                        onClick={() => {
+                            setLoading(true);
+                            // Simulate a brief loading state for better UX
+                            setTimeout(() => {
+                                login('dummy_token_dev_mode');
+                                navigate('/model-search');
+                            }, 800);
+                        }}
+                        disabled={loading}
+                        className="w-full flex items-center justify-center py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0f1115] focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-900/20"
+                    >
+                        {loading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <>
+                                <span>Continue to App</span>
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                            </>
+                        )}
+                    </button>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full flex items-center justify-center py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0f1115] focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-900/20"
-                        >
-                            {loading ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                                "Continue with Email"
-                            )}
-                        </button>
-                    </form>
-                ) : (
-                    <form onSubmit={handleVerifyCode} className="space-y-6">
-                        <div className="space-y-2">
-                            <label htmlFor="code" className="block text-sm font-medium text-gray-300">
-                                Verification Code
-                            </label>
-                            <input
-                                id="code"
-                                name="code"
-                                type="text"
-                                autoComplete="one-time-code"
-                                required
-                                maxLength={6}
-                                className="block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-center font-mono text-2xl tracking-[0.5em]"
-                                placeholder="······"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value)}
-                                disabled={loading}
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full flex items-center justify-center py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0f1115] focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-900/20"
-                        >
-                            {loading ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                                'Verify & Login'
-                            )}
-                        </button>
-
-                        <div className="flex items-center justify-between text-sm pt-4 border-t border-white/5">
-                            <button
-                                type="button"
-                                onClick={() => setStep(1)}
-                                className="text-gray-400 hover:text-white transition-colors"
-                            >
-                                ← Back
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleResendCode}
-                                disabled={countdown > 0 || loading}
-                                className={`${countdown > 0 ? 'text-gray-500 cursor-not-allowed' : 'text-blue-400 hover:text-blue-300 font-medium'} transition-colors`}
-                            >
-                                {countdown > 0 ? `Resend in ${countdown}s` : 'Resend code'}
-                            </button>
-                        </div>
-                    </form>
-                )}
+                    <p className="text-center text-xs text-gray-500">
+                        Development Mode Enabled
+                    </p>
+                </div>
             </div>
         </div>
     );

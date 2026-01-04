@@ -13,12 +13,21 @@ export const UserProvider = ({ children }) => {
         const fetchUser = async () => {
             const token = localStorage.getItem('token');
             if (token) {
-                try {
-                    const userData = await getCurrentUser();
-                    setUser(userData);
-                } catch (error) {
-                    console.error("Failed to fetch user", error);
-                    localStorage.removeItem('token');
+                if (token === 'dummy_token_dev_mode') {
+                    setUser({
+                        id: 'dev_user',
+                        email: 'dev@example.com',
+                        is_active: true,
+                        full_name: 'Developer'
+                    });
+                } else {
+                    try {
+                        const userData = await getCurrentUser();
+                        setUser(userData);
+                    } catch (error) {
+                        console.error("Failed to fetch user", error);
+                        localStorage.removeItem('token');
+                    }
                 }
             }
             setLoading(false);
@@ -29,9 +38,18 @@ export const UserProvider = ({ children }) => {
 
     const login = (token) => {
         localStorage.setItem('token', token);
-        // We'll refetch user data or set it directly if we had it
-        // Ideally we fetch the user immediately after setting token
-        getCurrentUser().then(setUser).catch(console.error);
+        if (token === 'dummy_token_dev_mode') {
+            setUser({
+                id: 'dev_user',
+                email: 'dev@example.com',
+                is_active: true,
+                full_name: 'Developer'
+            });
+        } else {
+            // We'll refetch user data or set it directly if we had it
+            // Ideally we fetch the user immediately after setting token
+            getCurrentUser().then(setUser).catch(console.error);
+        }
     };
 
     const logout = () => {

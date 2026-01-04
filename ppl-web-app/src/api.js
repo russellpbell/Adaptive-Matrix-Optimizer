@@ -90,6 +90,17 @@ export const trainModel = async (config) => {
     return response.data;
 };
 
+export const uploadModel = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/models/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};
+
 export const createCheckoutSession = async (interval) => {
     const response = await api.post('/payment/create-checkout-session', { interval });
     return response.data;

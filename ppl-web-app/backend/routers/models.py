@@ -1,13 +1,45 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 import database, auth, models, schemas
+import shutil
+import os
+import uuid
 
 router = APIRouter(
     prefix="/models",
     tags=["models"],
     responses={404: {"description": "Not found"}},
 )
+
+@router.post("/upload")
+def upload_model(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Upload a zipped model file.
+    """
+    # Create uploads directory if not exists
+    upload_dir = "models_data/uploads" # Use a separate dir to avoid confusion with models module
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    file_id = str(uuid.uuid4())
+    filename = f"{file_id}_{file.filename}"
+    file_path = os.path.join(upload_dir, filename)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    # In a real app, we would unzip and validate, and save metadata to DB.
+    # For now, we return success.
+    
+    return {
+        "id": file_id,
+        "name": file.filename,
+        "status": "Uploaded",
+        "accuracy": 0.0 # Placeholder
+    }
 
 @router.post("/train", response_model=schemas.ModelResponse) # Assuming ModelResponse schema needs to be created or we use a generic dict for now
 def train_model(

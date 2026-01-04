@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, BarChart2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import api from '../api';
+import api, { uploadModel, getModels } from '../api';
 // Use existing or create new CSS module. For now, inline or reuse common styles might be easier, 
 // but I'll create a dedicated module for cleanliness.
 import styles from './ModelSearch.module.css';
@@ -37,10 +37,40 @@ const ModelSearch = () => {
         <div className={styles.container}>
             <div className={styles.header}>
                 <h1>Model Registry</h1>
-                <Link to="/new-variable" className={styles.createButton}>
-                    <Plus size={16} />
-                    <span>Train New Model</span>
-                </Link>
+                <div className="flex gap-3">
+                    <input
+                        type="file"
+                        id="zip-upload"
+                        accept=".zip"
+                        style={{ display: 'none' }}
+                        onChange={async (e) => {
+                            if (e.target.files && e.target.files[0]) {
+                                try {
+                                    alert("Uploading model... this may take a moment."); // Simple feedback
+                                    await uploadModel(e.target.files[0]);
+                                    alert("Model uploaded successfully!");
+                                    // Refresh models
+                                    const data = await getModels();
+                                    setModels(data);
+                                } catch (err) {
+                                    console.error(err);
+                                    alert("Failed to upload model.");
+                                }
+                            }
+                        }}
+                    />
+                    <button
+                        onClick={() => document.getElementById('zip-upload').click()}
+                        className={`${styles.createButton} bg-green-600 hover:bg-green-700`}
+                    >
+                        <Plus size={16} />
+                        <span>Upload .zip</span>
+                    </button>
+                    <Link to="/new-variable" className={styles.createButton}>
+                        <Plus size={16} />
+                        <span>Train New Model</span>
+                    </Link>
+                </div>
             </div>
 
             <div className={styles.searchBar}>
