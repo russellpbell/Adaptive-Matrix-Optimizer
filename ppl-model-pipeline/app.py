@@ -59,7 +59,7 @@ try:
     original_is_active_subscriber = st_paywall.stripe_auth.is_active_subscriber
 
     def monkey_patched_is_active_subscriber(email):
-        if email == "russellpaulbell@gmail.com":
+        if email in ["russellpaulbell@gmail.com", "danieljdurr@gmail.com"]:
             return True
         return original_is_active_subscriber(email)
 
