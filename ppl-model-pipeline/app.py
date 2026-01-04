@@ -67,6 +67,12 @@ try:
     st_paywall.stripe_auth.is_active_subscriber = monkey_patched_is_active_subscriber
     st_paywall.aggregate_auth.is_active_subscriber = monkey_patched_is_active_subscriber
 
+    # --- DEBUG: Show the exact URL being used for Auth ---
+    # This helps debug the "redirect_uri_mismatch" error
+    if "redirect_url" in st.secrets:
+        st.info(f"**Debug Info:** The app is configured to redirect to: `{st.secrets['redirect_url']}`")
+        st.caption("Please copy this EXACT URL and paste it into 'Authorized redirect URIs' in your Google Cloud Console.")
+
 except KeyError as e:
     st.error("🚨 **Missing Secrets Configuration!** 🚨")
     st.markdown(f"""
