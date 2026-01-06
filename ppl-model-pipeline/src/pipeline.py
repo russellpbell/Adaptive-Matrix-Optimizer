@@ -156,6 +156,11 @@ class PPLPipeline:
                 df['timestamp'] = pd.date_range(start='2023-01-01', periods=len(df), freq='3min')
 
         # Apply Data Quality & Anomaly Detection
+        # Ensure all non-timestamp columns are numeric
+        cols_to_convert = [c for c in df.columns if c != 'timestamp']
+        for c in cols_to_convert:
+            df[c] = pd.to_numeric(df[c], errors='coerce')
+            
         df = self.clean_and_impute(df)
         
         # Detect anomalies on the first potential feature

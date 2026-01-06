@@ -33,6 +33,7 @@ def status_printer(msg, step, total):
     print(f"STATUS|{step}|{total}|{msg}", flush=True)
 
 def train(args):
+    print(f"DEBUG: Starting Runner V2.1 (Fix+Coerce)", flush=True)
     status_printer("Initializing Worker...", 0, 5)
     
     # Load Data
