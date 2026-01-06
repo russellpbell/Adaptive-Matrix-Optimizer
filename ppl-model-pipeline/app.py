@@ -1,14 +1,20 @@
+import os
+
+# Set environment variables for TensorFlow/Streamlit compatibility before importing other modules
+# These must be set before ANY other imports to be effective
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Suppress INFO and WARNING logs
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+import sys
 import streamlit as st
 import pandas as pd
 import numpy as np
-import os
-import sys
 import plotly.express as px
 import random
 
-
 # Add src to path
 sys.path.append(os.path.abspath('.'))
+# from src.pipeline import PPLPipeline
 
 def apply_bad_data_rules(df, rules):
     """
@@ -49,88 +55,183 @@ def apply_bad_data_rules(df, rules):
 
 st.set_page_config(page_title="Adaptive Matrix Optimization", layout="wide")
 
-try:
-    from st_paywall import add_auth
-    import st_paywall.aggregate_auth
-    import st_paywall.stripe_auth
+# --- Authentication Bypass / Landing Page ---
+if 'app_granted' not in st.session_state:
+    st.session_state['app_granted'] = False
 
-    # Monkey-patch to whitelist admin email
-    # We use stripe_auth as the source of truth for the original function
-    original_is_active_subscriber = st_paywall.stripe_auth.is_active_subscriber
+if not st.session_state['app_granted']:
+    # --- Marketing / Login Page Content ---
+    st.markdown("""
+<style>
+/* Card Container using Streamlit Theme Variables */
+.landing-card {
+    padding: 2rem; /* Reduced padding */
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
 
-    def monkey_patched_is_active_subscriber(email):
-        if email in ["russellpaulbell@gmail.com", "danieljdurr@gmail.com"]:
-            return True
-        return original_is_active_subscriber(email)
+/* Titles */
+.landing-title {
+    color: var(--text-color);
+    font-family: 'Helvetica Neue', sans-serif;
+    margin-bottom: 0.5rem;
+}
 
-    # Patch both locations to ensure the redirect uses our logic
-    st_paywall.stripe_auth.is_active_subscriber = monkey_patched_is_active_subscriber
-    st_paywall.aggregate_auth.is_active_subscriber = monkey_patched_is_active_subscriber
+.landing-subtitle {
+     color: var(--text-color);
+     opacity: 0.8;
+     font-weight: 300;
+     margin-bottom: 2rem;
+}
 
-    # --- DEBUG: Show the exact URL being used for Auth ---
-    # This helps debug the "redirect_uri_mismatch" error
-    if "redirect_url" in st.secrets:
-        st.info(f"**Debug Info:** The app is configured to redirect to: `{st.secrets['redirect_url']}`")
-        st.caption("Please copy this EXACT URL and paste it into 'Authorized redirect URIs' in your Google Cloud Console.")
 
-except KeyError as e:
-    st.error("🚨 **Missing Secrets Configuration!** 🚨")
-    st.markdown(f"""
-    The application failed to load because a required secret is missing: `{e}`.
-    
-    **How to fix this on Streamlit Cloud:**
-    1. Go to your App Dashboard on Streamlit Cloud.
-    2. Click **Settings** (three dots) -> **Settings** -> **Secrets**.
-    3. Paste your valid `secrets.toml` content (Google Client ID, Stripe Keys, etc.).
-    4. Reboot the app.
-    """)
-    st.stop()
-except Exception as e:
-    st.error(f"An unexpected error occurred during authentication setup: {e}")
-    st.stop()
+/* Content Text */
+.landing-content {
+    text-align: left;
+    padding: 0 1rem;
+    color: var(--text-color);
+}
 
-# --- Marketing / Login Page Content ---
-intro_text = st.empty()
-intro_text.markdown("""
-<div style="padding: 3rem 2rem; max-width: 900px; margin: 0 auto; text-align: center; color: #e0e0e0; background-color: #1e1e1e; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-    <h1 style="color: #ffffff; font-family: 'Helvetica Neue', sans-serif;">Adaptive Matrix Optimization</h1>
-    <h3 style="color: #a0a0a0; font-weight: 300;">Next-Generation Open-Loop Optimizer for Industrial Systems</h3>
-    <br>
-    <div style="padding: 20px; text-align: left;">
-        <p style="font-size: 1.1rem; line-height: 1.6; color: #f0f0f0;">
-            <strong>Welcome to a future of predictable performance and aligned organizations.</strong>
-        </p>
-        <p style="color: #cccccc;">
-            Upload your timeseries data and our advanced modeling and optimization engine will unlock unprecedented insights and recommendations.
-        </p>
-        <ul style="margin-top: 20px; margin-bottom: 30px; color: #cccccc; line-height: 1.8;">
-            <li><strong style="color: #fff;">Machine Learning Modeling:</strong> Understand your process based on your data rather than a theoretical simulation.</li>
-            <li><strong style="color: #fff;">Data Privacy:</strong> We never store your data and we allow you to download all of the insights and models created based on your data. Data is processed locally, so we couldn't see it even if we wanted to.</li>
-            <li><strong style="color: #fff;">What-If & Real Time Optimization:</strong> Use our unique pipeline for optimizing processes to unlock more value from your processes.</li>
-        </ul>
-        <p style="font-size: 0.9rem; color: #888; text-align: center; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px;">
-            Please login via the sidebar to access the application.
-        </p>
-    </div>
+.landing-content strong {
+    color: var(--primary-color);
+}
+
+/* Center the Streamlit Button */
+/* We target the container of the button. */
+/* Using both flex and text-align for robustness */
+div.stButton {
+    display: flex;
+    justify-content: center;
+    width: 100%; 
+    margin-top: 2rem;
+}
+div.stButton > button {
+    display: inline-flex;
+}
+</style>
+
+<div class="landing-card">
+<h1 class="landing-title">Adaptive Matrix Optimization</h1>
+<h3 class="landing-subtitle">Next-Generation Open-Loop Optimizer for Industrial Systems</h3>
+
+<div class="landing-content">
+<p style="font-size: 1.1rem; line-height: 1.5;">
+<strong>Welcome to a future of predictable performance and aligned organizations.</strong>
+</p>
+<p>
+Upload your timeseries data and our advanced modeling and optimization engine will unlock unprecedented insights and recommendations.
+</p>
+<ul style="line-height: 1.6; padding-left: 20px; margin-top: 1rem;">
+<li><strong>Machine Learning Modeling:</strong> Understand your process based on your data rather than a theoretical simulation.</li>
+<li><strong>Data Privacy:</strong> We never store your data and we allow you to download all of the insights and models created based on your data. Data is processed locally.</li>
+<li><strong>What-If & Real Time Optimization:</strong> Use our unique pipeline for optimizing processes to unlock more value from your processes.</li>
+</ul>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
-add_auth(
-    required=True,
-    login_button_text="Login with Google",
-    login_button_color="#FD504D",
-    login_sidebar=True,
-)
+    # Render button using columns for centering
+    # Use ratios to push button to absolute center without making it full width
+    col1, col2, col3 = st.columns([5, 2, 5])
+    with col2:
+        if st.button("Continue to App", type="primary"):
+            st.session_state['app_granted'] = True
+            st.rerun()
 
-# Clear marketing text after login
-intro_text.empty()
+    # Create space effectively pushing footer down if needed
+    st.write("")
+    
+    # Stop execution here so the rest of the app doesn't run until granted
+    st.stop()
+
+
+# try:
+#     from st_paywall import add_auth
+#     import st_paywall.aggregate_auth
+#     import st_paywall.stripe_auth
+# 
+#     # Monkey-patch to whitelist admin email
+#     # We use stripe_auth as the source of truth for the original function
+#     original_is_active_subscriber = st_paywall.stripe_auth.is_active_subscriber
+# 
+#     def monkey_patched_is_active_subscriber(email):
+#         if email in ["russellpaulbell@gmail.com", "danieljdurr@gmail.com"]:
+#             return True
+#         return original_is_active_subscriber(email)
+# 
+#     # Patch both locations to ensure the redirect uses our logic
+#     st_paywall.stripe_auth.is_active_subscriber = monkey_patched_is_active_subscriber
+#     st_paywall.aggregate_auth.is_active_subscriber = monkey_patched_is_active_subscriber
+# 
+#     # --- DEBUG: Show the exact URL being used for Auth ---
+#     # This helps debug the "redirect_uri_mismatch" error
+#     if "redirect_url" in st.secrets:
+#         st.info(f"**Debug Info:** The app is configured to redirect to: `{st.secrets['redirect_url']}`")
+#         st.caption("Please copy this EXACT URL and paste it into 'Authorized redirect URIs' in your Google Cloud Console.")
+# 
+# except KeyError as e:
+#     st.error("🚨 **Missing Secrets Configuration!** 🚨")
+#     st.markdown(f"""
+#     The application failed to load because a required secret is missing: `{e}`.
+#     
+#     **How to fix this on Streamlit Cloud:**
+#     1. Go to your App Dashboard on Streamlit Cloud.
+#     2. Click **Settings** (three dots) -> **Settings** -> **Secrets**.
+#     3. Paste your valid `secrets.toml` content (Google Client ID, Stripe Keys, etc.).
+#     4. Reboot the app.
+#     """)
+#     st.stop()
+# except Exception as e:
+#     st.error(f"An unexpected error occurred during authentication setup: {e}")
+#     st.stop()
+# 
+# # --- Marketing / Login Page Content ---
+# intro_text = st.empty()
+# intro_text.markdown("""
+# <div style="padding: 3rem 2rem; max-width: 900px; margin: 0 auto; text-align: center; color: #e0e0e0; background-color: #1e1e1e; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+#     <h1 style="color: #ffffff; font-family: 'Helvetica Neue', sans-serif;">Adaptive Matrix Optimization</h1>
+#     <h3 style="color: #a0a0a0; font-weight: 300;">Next-Generation Open-Loop Optimizer for Industrial Systems</h3>
+#     <br>
+#     <div style="padding: 20px; text-align: left;">
+#         <p style="font-size: 1.1rem; line-height: 1.6; color: #f0f0f0;">
+#             <strong>Welcome to a future of predictable performance and aligned organizations.</strong>
+#         </p>
+#         <p style="color: #cccccc;">
+#             Upload your timeseries data and our advanced modeling and optimization engine will unlock unprecedented insights and recommendations.
+#         </p>
+#         <ul style="margin-top: 20px; margin-bottom: 30px; color: #cccccc; line-height: 1.8;">
+#             <li><strong style="color: #fff;">Machine Learning Modeling:</strong> Understand your process based on your data rather than a theoretical simulation.</li>
+#             <li><strong style="color: #fff;">Data Privacy:</strong> We never store your data and we allow you to download all of the insights and models created based on your data. Data is processed locally, so we couldn't see it even if we wanted to.</li>
+#             <li><strong style="color: #fff;">What-If & Real Time Optimization:</strong> Use our unique pipeline for optimizing processes to unlock more value from your processes.</li>
+#         </ul>
+#         <p style="font-size: 0.9rem; color: #888; text-align: center; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px;">
+#             Please login via the sidebar to access the application.
+#         </p>
+#     </div>
+# </div>
+# """, unsafe_allow_html=True)
+# 
+# add_auth(
+#     required=True,
+#     login_button_text="Login with Google",
+#     login_button_color="#FD504D",
+#     login_sidebar=True,
+# )
+# 
+# # Clear marketing text after login
+# intro_text.empty()
 
 st.markdown("<h1 style='text-align: center;'>Adaptive Matrix Optimization</h1>", unsafe_allow_html=True)
 
 # Navigation
 # Navigation State
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Data Exploration", "Modeling", "Optimization"])
+page = st.sidebar.radio("Go to", ["Data Exploration", "Model Training / Exploration", "Optimization"])
 st.session_state['current_page'] = page
 
 # --- PAGE 1: Data Exploration ---
@@ -311,11 +412,11 @@ if st.session_state['current_page'] == "Data Exploration":
     # Removed Navigation Buttons (Sidebar Used)
 
 # --- PAGE 2: Model Training ---
-elif st.session_state['current_page'] == "Modeling":
+elif st.session_state['current_page'] == "Model Training / Exploration":
     st.header("Model Training Pipeline")
     
+    # Lazy import to prevent freezing/locking on startup
     from src.pipeline import PPLPipeline
-    import plotly.express as px
     
     st.subheader("Data Loading")
     
@@ -375,188 +476,345 @@ elif st.session_state['current_page'] == "Modeling":
         
         st.write(f"Training on {len(filtered_df)} samples (after filters).")
                 
-        # 3. Training Configuration
-        st.subheader("Train Model")
+        # 3. Training / Loading Configuration
+        # Create tabs for Training vs Loading
+        tab_train, tab_load = st.tabs(["Train New Model", "Load Existing Model"])
         
-        col1, col2 = st.columns(2)
-        with col1:
-            input_cols = st.multiselect("Input Features (MVs/DVs)", all_cols, default=[])
-        with col2:
-            output_cols = st.multiselect("Output Targets (CVs)", all_cols, default=[])
+        with tab_train:
+            st.subheader("Train New Model")
+            col1, col2 = st.columns(2)
+            with col1:
+                input_cols = st.multiselect("Input Features (MVs/DVs)", all_cols, default=[])
+            with col2:
+                output_cols = st.multiselect("Output Targets (CVs)", all_cols, default=[])
+                
+            # Quality Presets Logic
+            N_samples = len(filtered_df)
             
-        # Quality Presets Logic
-        N_samples = len(filtered_df)
-        
-        if 'quality_selector' not in st.session_state:
-            st.session_state['quality_selector'] = "Quick"
-            # Init defaults
-            st.session_state['epochs_in'] = 20
-            st.session_state['samples_in'] = min(1000, N_samples)
-            st.session_state['interp_in'] = 500 # Unified Interpretation samples (LIME=Val, SHAP=Val/2)
-            # st.session_state['window_size_in'] = 32 # REMOVED to avoid Streamlit warning ( widget creates it )
-
-        def calculate_stat_sample(N, confidence=0.99, margin_of_error=0.03):
-            """
-            Calculate sample size for infinite population at 99% confidence, 3% margin.
-            Z-score for 99% is ~2.576.
-            n = (Z^2 * p * (1-p)) / E^2
-            Assuming p=0.5 (worst case).
-            n = (2.576^2 * 0.25) / 0.03^2 ~= 1843
-            We'll cap at 2000 or N, whichever is smaller.
-            """
-            target = 1844
-            return min(target, N)
-
-        def on_quality_change():
-            q = st.session_state['quality_selector']
-            N = len(filtered_df) 
-            stat_n = calculate_stat_sample(N) # Target ~1850
-            
-            if q == 'Quick':
+            if 'quality_selector' not in st.session_state:
+                st.session_state['quality_selector'] = "Quick"
+                # Init defaults
                 st.session_state['epochs_in'] = 20
-                st.session_state['samples_in'] = min(1000, N)
-                st.session_state['interp_in'] = stat_n # Use stat significant, but effectively maybe less if user wants speed? 
-                # User asked for 99% always. So we stick to stat_n.
-            elif q == 'Balanced':
-                st.session_state['epochs_in'] = 100
-                st.session_state['samples_in'] = min(5000, N)
-                st.session_state['interp_in'] = stat_n
-            elif q == 'Deep Training':
-                st.session_state['epochs_in'] = 500
-                st.session_state['samples_in'] = N
-                st.session_state['interp_in'] = stat_n # Max confidence
-
-        # 1. Process Residence Time (Full Row, Above)
-        st.caption("Process Dynamics Parameter")
-        window_size = st.number_input("Process Residence Time (Window Size)", min_value=10, max_value=200, value=32, key="window_size_in", help="Number of past time steps the model looks back to make a prediction.")
-
-        # 2. Training Quality & Run Name (Columns)
-        c_qual, c_name = st.columns([0.5, 0.5])
-        with c_qual:
-            st.radio("Training Quality", ["Quick", "Balanced", "Deep Training"], key="quality_selector", on_change=on_quality_change, horizontal=True)
-            
-        with c_name:
-             run_name = st.text_input("Run Name (Experiment ID)", value="experiment_v1")
+                st.session_state['samples_in'] = min(1000, N_samples)
+                st.session_state['interp_in'] = 500 # Unified Interpretation samples (LIME=Val, SHAP=Val/2)
+    
+            def calculate_stat_sample(N, confidence=0.99, margin_of_error=0.03):
+                target = 1844
+                return min(target, N)
+    
+            def on_quality_change():
+                q = st.session_state['quality_selector']
+                N = len(filtered_df) 
+                stat_n = calculate_stat_sample(N) # Target ~1850
+                
+                if q == 'Quick':
+                    st.session_state['epochs_in'] = 20
+                    st.session_state['samples_in'] = min(1000, N)
+                    st.session_state['interp_in'] = stat_n 
+                elif q == 'Balanced':
+                    st.session_state['epochs_in'] = 100
+                    st.session_state['samples_in'] = min(5000, N)
+                    st.session_state['interp_in'] = stat_n
+                elif q == 'Deep Training':
+                    st.session_state['epochs_in'] = 500
+                    st.session_state['samples_in'] = N
+                    st.session_state['interp_in'] = stat_n
+    
+            # 1. Process Residence Time (Full Row, Above)
+            st.caption("Process Dynamics Parameter")
+            window_size = st.number_input("Process Residence Time (Window Size)", min_value=10, max_value=200, value=32, key="window_size_in", help="Number of past time steps the model looks back to make a prediction.")
+    
+            # 2. Training Quality & Run Name (Columns)
+            c_qual, c_name = st.columns([0.5, 0.5])
+            with c_qual:
+                st.radio("Training Quality", ["Quick", "Balanced", "Deep Training"], key="quality_selector", on_change=on_quality_change, horizontal=True)
+                
+            with c_name:
+                 run_name = st.text_input("Run Name (Experiment ID)", value="experiment_v1")
             
         # Advanced Settings below...
-        with st.expander("Advanced Settings (Epochs, Samples, Interpretation)", expanded=False):
-            ac1, ac2 = st.columns(2)
-            epochs = ac1.number_input("Epochs", min_value=1, value=st.session_state.get('epochs_in', 20), key="epochs_in")
-            sample_size = ac2.number_input("Training Sample Size", min_value=10, max_value=len(filtered_df), value=st.session_state.get('samples_in', 100), key="samples_in")
-            
-            # Unified Interpretability Input
-            rec_n = calculate_stat_sample(N_samples)
-            interp_samples = st.number_input(f"Model Interpretability Samples (99% Conf: ~{rec_n})", min_value=10, value=st.session_state.get('interp_in', rec_n), key="interp_in", help="Combined sample size for LIME and SHAP analysis.")
-            
-        # UI for Folder Picker
-        output_parent_dir = "../output"
-        resolved_parent = os.path.abspath(output_parent_dir)
-        if not os.path.exists(resolved_parent):
-            os.makedirs(resolved_parent, exist_ok=True)
-            
-        # Get subfolders
-        existing_folders = [d for d in os.listdir(resolved_parent) if os.path.isdir(os.path.join(resolved_parent, d))]
-        existing_folders = sorted(existing_folders)
-        
-        st.write("**Output Directory**")
-        st.info(f"Artifacts will be saved to: `../output/{run_name}`")
-        final_output_path = os.path.join(resolved_parent, run_name)
-
-        if st.button("Start Training"):
-            if not input_cols or not output_cols:
-                st.error("Please select at least one input and one output.")
-            else:
-                # Progress Steps UI
-                progress_placeholder = st.empty()
+        with tab_train:
+            with st.expander("Advanced Settings (Epochs, Samples, Interpretation)", expanded=False):
+                ac1, ac2 = st.columns(2)
+                epochs = ac1.number_input("Epochs", min_value=1, value=st.session_state.get('epochs_in', 20), key="epochs_in")
+                sample_size = ac2.number_input("Training Sample Size", min_value=10, max_value=len(filtered_df), value=st.session_state.get('samples_in', 100), key="samples_in")
                 
-                def update_steps(status_msg, step_idx):
-                     steps = [
-                         ("Initializing...", "done" if step_idx > 0 else "running"),
-                         ("Preprocessing Data...", "done" if step_idx > 1 else ("running" if step_idx == 1 else "wait")),
-                         ("Training Model...", "done" if step_idx > 2 else ("running" if step_idx == 2 else "wait")),
-                         ("Generating Explanations...", "done" if step_idx > 3 else ("running" if step_idx == 3 else "wait")),
-                         ("Complete", "done" if step_idx > 4 else "wait")
-                     ]
-                     
-                     # Simple Text Representation of Steps
-                     md_str = "**Training Progress:**\n\n"
-                     for name, status in steps:
+                # Unified Interpretability Input
+                rec_n = calculate_stat_sample(N_samples)
+                interp_samples = st.number_input(f"Model Interpretability Samples (99% Conf: ~{rec_n})", min_value=10, value=st.session_state.get('interp_in', rec_n), key="interp_in", help="Combined sample size for LIME and SHAP analysis.")
+                
+            # UI for Folder Picker
+            output_parent_dir = "../output"
+            resolved_parent = os.path.abspath(output_parent_dir)
+            if not os.path.exists(resolved_parent):
+                os.makedirs(resolved_parent, exist_ok=True)
+                
+            st.write("**Output Directory**")
+            st.info(f"Artifacts will be saved to: `../output/{run_name}`")
+            final_output_path = os.path.join(resolved_parent, run_name)
+    
+            # Helper for running subprocess
+            def run_worker_process(command, progress_placeholder):
+                import subprocess
+                import sys
+                import pickle
+                
+                # Reset Progress
+                def update_ui(pipeline_step, msg):
+                    # Map Pipeline Steps (1-6) to UI Phases (0-4)
+                    # Pipeline: 1=Load, 2=Preproc, 3=Encode, 4=Model, 5=Train, 6=Interp
+                    # UI: 0=Init, 1=Preproc, 2=Model Ops, 3=Explanations, 4=Complete
+                    
+                    ui_phase = 0
+                    if pipeline_step == 1: ui_phase = 0 # Initializing
+                    elif pipeline_step in [2, 3]: ui_phase = 1 # Preprocessing
+                    elif pipeline_step in [4, 5]: ui_phase = 2 # Model Operations
+                    elif pipeline_step == 6: ui_phase = 3 # Explanations
+                    elif pipeline_step > 6: ui_phase = 4 # Complete
+                    
+                    steps = [
+                         ("Initializing...", "done" if ui_phase > 0 else "running"),
+                         ("Preprocessing Data...", "done" if ui_phase > 1 else ("running" if ui_phase == 1 else "wait")),
+                         ("Model Operations...", "done" if ui_phase > 2 else ("running" if ui_phase == 2 else "wait")),
+                         ("Generating Explanations...", "done" if ui_phase > 3 else ("running" if ui_phase == 3 else "wait")),
+                         ("Complete", "done" if ui_phase > 4 else "wait")
+                    ]
+                    
+                    md_str = "**Job Progress:**\n\n"
+                    for i, (name, status) in enumerate(steps):
                          icon = "✅" if status == "done" else ("⏳" if status == "running" else "⬜")
                          style = "font-weight: bold;" if status == "running" else ""
-                         md_str += f"* {icon} <span style='{style}'>{name}</span>\n"
-                     
-                     progress_placeholder.markdown(md_str, unsafe_allow_html=True)
+                         # Add message details if running
+                         details = f" - *{msg}*" if status == "running" else ""
+                         md_str += f"* {icon} <span style='{style}'>{name}</span>{details}\n"
+                    progress_placeholder.markdown(md_str, unsafe_allow_html=True)
 
-                # Initialize Progress
-                update_steps("Starting...", 0)
+                # Prepare Environment with CPU enforcement
+                worker_env = os.environ.copy()
+                worker_env['CUDA_VISIBLE_DEVICES'] = '-1'
+                worker_env['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+                process = subprocess.Popen(
+                    command, 
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True,
+                    env=worker_env
+                )
                 
-                # Callback wrapper
-                def combined_callback(msg, step, total):
-                    # Guess step index based on msg content (heuristic)
-                    # Or just use the 'step' provided by pipeline if mapped (0-100)
-                    # Simple mapping:
-                    phase = 0
-                    msg_l = msg.lower()
-                    if "loading" in msg_l or "normalizing" in msg_l: phase = 1
-                    elif "training" in msg_l or "mse" in msg_l: phase = 2
-                    elif "explanation" in msg_l or "shap" in msg_l: phase = 3
-                    elif "finish" in msg_l: phase = 4
-                    
-                    update_steps(msg, phase)
+                error_lines = []
                 
-                try:
-                    # Resolve output path
-                    resolved_out_dir = os.path.abspath(final_output_path)
-                    if not os.path.exists(resolved_out_dir):
-                        try:
-                            os.makedirs(resolved_out_dir)
-                            st.info(f"Created output directory at {resolved_out_dir}")
-                        except Exception as e:
-                            st.warning(f"Could not create directory {resolved_out_dir}: {e}. Falling back to default.")
-                            resolved_out_dir = os.path.abspath('../output')
-
-                    # Determine data path for Pipeline
-                    # If override is provided (df_override), this path is mostly for logging or fallback
-                    pipeline_data_path = "data_from_memory.csv"
+                while True:
+                    line = process.stdout.readline()
+                    if not line and process.poll() is not None:
+                        break
                     
-                    if uploaded_file:
-                        temp_path = "temp_uploaded.csv"
-                        with open(temp_path, "wb") as f:
-                            f.write(uploaded_file.getbuffer())
-                        pipeline_data_path = temp_path
-                    elif selected_file:
-                        pipeline_data_path = os.path.join(data_dir, selected_file)
-                    
-                    pipeline = PPLPipeline(pipeline_data_path, output_dir=resolved_out_dir)
-
-                    # Run Pipeline
-                    results = pipeline.run(
-                        input_cols, 
-                        output_cols, 
-                        sample_size=sample_size, 
-                        epochs=epochs,
-                        lime_samples=interp_samples,
-                        shap_samples=int(interp_samples // 2), # Heuristic: SHAP is slower, use half
-                        window_size=window_size,
-                        run_name=run_name,
-                        status_callback=combined_callback,
-                        df_override=filtered_df
-                    )
-                    
-                    update_steps("Done", 5) # All done
-                    st.success(f"Training Finished. Final MSE: {results['mse']:.5f}")
-
-                    # Store Results in Session State
-                    st.session_state['training_results'] = {
-                        'results': results,
-                        'run_name': run_name,
-                        'output_cols': output_cols
-                    }
+                    if line:
+                        stripped = line.strip()
+                        if stripped.startswith("STATUS|"):
+                            # Parse: STATUS|step|total|msg
+                            parts = stripped.split('|')
+                            if len(parts) >= 4:
+                                step = int(parts[1])
+                                msg = parts[3]
+                                update_ui(step, msg)
+                        elif stripped.startswith("ERROR|"):
+                            st.error(f"Worker Error: {stripped[6:]}")
+                        else:
+                            print(f"[WORKER] {stripped}") # Debug to console
                 
-                except Exception as e:
-                    st.error(f"Training Failed: {e}")
-                    import traceback
-                    st.write(traceback.format_exc())
+                # Check return code
+                if process.returncode != 0:
+                    err = process.stderr.read()
+                    st.error(f"Worker Process Failed.\n{err}")
+                    return None
+                    
+                return True
+
+            # Resolve runner path absolute
+            runner_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'runner.py')
+
+            if st.button("Start Training"):
+                if not input_cols or not output_cols:
+                    st.error("Please select at least one input and one output.")
+                else:
+                    progress_placeholder = st.empty()
+                    
+                    try:
+                        # 1. Save Temp Data
+                        # Resolve temp path relative to output
+                        # Assuming output_parent_dir is defined
+                        temp_data_path = os.path.abspath(os.path.join("../output", "temp_train_data.csv"))
+                        resolved_out_dir = os.path.abspath("../output")
+                        if not os.path.exists(resolved_out_dir): os.makedirs(resolved_out_dir)
+                        
+                        filtered_df.to_csv(temp_data_path, index=False)
+                        
+                        # 2. Construct Command
+                        cmd = [
+                            sys.executable, runner_path, "train",
+                            "--data_path", temp_data_path,
+                            "--output_dir", os.path.abspath(final_output_path),
+                            "--input_cols", ",".join(input_cols),
+                            "--output_cols", ",".join(output_cols),
+                            "--sample_size", str(sample_size),
+                            "--epochs", str(epochs),
+                            "--lime_samples", str(interp_samples),
+                            "--shap_samples", str(int(interp_samples//2)),
+                            "--window_size", str(window_size),
+                            "--run_name", run_name
+                        ]
+                        
+                        st.info(f"Launching worker process...")
+                        success = run_worker_process(cmd, progress_placeholder)
+                        
+                        if success:
+                            # Load Results
+                            res_pkl = os.path.join(final_output_path, "results.pkl")
+                            if os.path.exists(res_pkl):
+                                with open(res_pkl, "rb") as f:
+                                    import pickle
+                                    results = pickle.load(f)
+                                    
+                                st.success(f"Training Finished. Final MSE: {results['mse']:.5f}")
+                                st.session_state['training_results'] = {
+                                    'results': results,
+                                    'run_name': run_name,
+                                    'output_cols': output_cols
+                                }
+                            else:
+                                st.error("Worker finished but no results.pkl found.")
+
+                    except Exception as e:
+                        st.error(f"Training Launch Failed: {e}")
+                        import traceback
+                        st.write(traceback.format_exc())
+
+        with tab_load:
+            st.write("### Upload Existing Model")
+            st.write("Upload a previously trained model artifact (ZIP).")
+            
+            model_path_load = None
+            config_path_load = None
+            results_path_load = None
+            
+            if True: # Enforce ZIP format
+                uploaded_zip = st.file_uploader("Model ZIP", type=['zip'])
+                if uploaded_zip:
+                    import zipfile
+                    import shutil
+                    temp_dir = "temp_load_model_zip"
+                    if os.path.exists(temp_dir):
+                        shutil.rmtree(temp_dir)
+                    os.makedirs(temp_dir)
+                    
+                    try:
+                        # Extract the ZIP
+                        with zipfile.ZipFile(uploaded_zip, 'r') as zip_ref:
+                            zip_ref.extractall(temp_dir)
+
+                        # Find config, model, and results
+                        # Find config, model, and results
+                        potential_configs = [os.path.join(dp, f) for dp, dn, filenames in os.walk(temp_dir) for f in filenames if f == 'config.yaml']
+                        potential_models = [os.path.join(dp, f) for dp, dn, filenames in os.walk(temp_dir) for f in filenames if f.endswith('.keras') or f.endswith('.h5')]
+                        potential_results = [os.path.join(dp, f) for dp, dn, filenames in os.walk(temp_dir) for f in filenames if f == 'results.pkl']
+                        
+                        if potential_configs and potential_models:
+                            config_path_load = potential_configs[0]
+                            model_path_load = potential_models[0]
+                            
+                            msg = f"Found config: {os.path.basename(config_path_load)} and model: {os.path.basename(model_path_load)}"
+                            if potential_results:
+                                results_path_load = potential_results[0]
+                                msg += f" and pre-calculated results: {os.path.basename(results_path_load)}"
+                            else:
+                                results_path_load = None
+                                
+                            st.success(msg)
+                        else:
+                            st.error("Could not find 'config.yaml' and a '.keras/.h5' model file in the ZIP.")
+                    except Exception as e:
+                        st.error(f"Error processing ZIP: {e}")
+                        
+            # Individual files upload removed.
+
+            if st.button("Load and Evaluate Model"):
+                if model_path_load and config_path_load:
+                    try:
+                        progress_placeholder = st.empty()
+                        
+                        # FAST PATH: Open existing results if available
+                        if results_path_load and os.path.exists(results_path_load):
+                            st.info("Loading pre-calculated results from artifact... (Skipping re-evaluation)")
+                            with open(results_path_load, "rb") as f:
+                                import pickle
+                                results = pickle.load(f)
+                            
+                            st.success("Loaded Results Successfully!")
+                            output_cols_loaded = results['config']['output_columns']
+                            run_name_loaded = results['config']['run_name']
+                            
+                            st.session_state['training_results'] = {
+                                'results': results,
+                                'run_name': run_name_loaded,
+                                'output_cols': output_cols_loaded
+                            }
+                            st.rerun()
+                            
+                        else:
+                            # SLOW PATH: Run evaluation worker
+                            # 1. Save Temp Data for Evaluation
+                            # We use filtered_df from app
+                            # Ensure absolute path resolution for temp files
+                            temp_data_path = os.path.abspath(os.path.join("../output", "temp_eval_data.csv"))
+                            
+                            # 2. Output Dir (Temp for loading)
+                            temp_out_dir = os.path.abspath(os.path.join("../output", "temp_eval_results"))
+                            
+                            # 3. Construct Command
+                            cmd = [
+                                sys.executable, runner_path, "evaluate",
+                                "--model_path", os.path.abspath(model_path_load),
+                                "--config_path", os.path.abspath(config_path_load),
+                                "--data_path", temp_data_path,
+                                "--output_dir", temp_out_dir,
+                                "--lime_samples", "50",
+                                "--shap_samples", "25"
+                            ]
+                            
+                            st.info("No pre-calculated results found. Launching isolated evaluation process...")
+                            success = run_worker_process(cmd, progress_placeholder)
+                            
+                            if success:
+                                # Load Results
+                                res_pkl = os.path.join(temp_out_dir, "results.pkl")
+                                if os.path.exists(res_pkl):
+                                    with open(res_pkl, "rb") as f:
+                                        import pickle
+                                        results = pickle.load(f)
+                                    
+                                    st.success("Evaluation / Loading Complete!")
+                                    
+                                    output_cols_loaded = results['config']['output_columns']
+                                    run_name_loaded = results['config']['run_name']
+                                    
+                                    st.session_state['training_results'] = {
+                                        'results': results,
+                                        'run_name': run_name_loaded,
+                                        'output_cols': output_cols_loaded
+                                    }
+                                    st.rerun()
+                                else:
+                                    st.error("Worker finished but no results.pkl found.")
+                        
+                    except Exception as e:
+                        st.error(f"Failed to load/evaluate model: {e}")
+                        import traceback
+                        st.write(traceback.format_exc())
+                else:
+                    st.warning("Please upload files to proceed.")
                     
         # Check for results in Session State
         if 'training_results' in st.session_state:

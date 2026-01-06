@@ -1,8 +1,12 @@
 pandas
-numpy
+numpy<2.0.0
 scipy
 pyts
-tensorflow
+# tensorflow  <-- Installed manually (tensorflow-macos) to avoid conflicts
+keras==2.15.0
+ml-dtypes==0.2.0
+protobuf<5.0.0
+tensorboard==2.15.2
 lime
 matplotlib
 seaborn
@@ -16,3 +20,4 @@ streamlit>=1.35.0
 plotly>=5.22.0
 statsmodels
 st-paywall==0.1.8
+watchdog
