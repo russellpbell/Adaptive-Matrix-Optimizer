@@ -137,12 +137,21 @@ class PPLPipeline:
         else:
              df = pd.read_csv(self.data_path, sep=None, engine='python')
         
+        # Strip whitespace from column names
+        df.columns = df.columns.str.strip()
+        
         if 'timestamp' not in df.columns:
             # Try to find timestamp column case-insensitive
-            cols_lower = [c.lower() for c in df.columns]
-            if 'timestamp' in cols_lower:
-                ts_col = df.columns[cols_lower.index('timestamp')]
-                df.rename(columns={ts_col: 'timestamp'}, inplace=True)
+            cols_lower = {c.lower(): c for c in df.columns}
+            possible_names = ['timestamp', 'date', 'time', 'datetime']
+            found_ts = None
+            for name in possible_names:
+                if name in cols_lower:
+                    found_ts = cols_lower[name]
+                    break
+            
+            if found_ts:
+                df.rename(columns={found_ts: 'timestamp'}, inplace=True)
             else:
                 df['timestamp'] = pd.date_range(start='2023-01-01', periods=len(df), freq='3min')
 

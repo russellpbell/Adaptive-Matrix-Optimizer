@@ -250,10 +250,19 @@ if st.session_state['current_page'] == "Data Exploration":
             except:
                 df = pd.read_csv(uploaded_file)
             
-            cols_lower = [c.lower() for c in df.columns]
-            if 'timestamp' in cols_lower:
-                ts_col = df.columns[cols_lower.index('timestamp')]
-                df.rename(columns={ts_col: 'timestamp'}, inplace=True)
+            # Strip whitespace
+            df.columns = df.columns.str.strip()
+            
+            cols_lower = {c.lower(): c for c in df.columns}
+            possible_names = ['timestamp', 'date', 'time', 'datetime']
+            found_ts = None
+            for name in possible_names:
+                if name in cols_lower:
+                    found_ts = cols_lower[name]
+                    break
+            
+            if found_ts:
+                df.rename(columns={found_ts: 'timestamp'}, inplace=True)
                 df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
                 df.dropna(subset=['timestamp'], inplace=True)
             else:
@@ -273,10 +282,19 @@ if st.session_state['current_page'] == "Data Exploration":
                  except:
                      df_new = pd.read_csv(new_file)
                  
-                 cols_lower = [c.lower() for c in df_new.columns]
-                 if 'timestamp' in cols_lower:
-                     ts_col = df_new.columns[cols_lower.index('timestamp')]
-                     df_new.rename(columns={ts_col: 'timestamp'}, inplace=True)
+                 # Strip whitespace
+                 df_new.columns = df_new.columns.str.strip()
+                 
+                 cols_lower = {c.lower(): c for c in df_new.columns}
+                 possible_names = ['timestamp', 'date', 'time', 'datetime']
+                 found_ts = None
+                 for name in possible_names:
+                     if name in cols_lower:
+                         found_ts = cols_lower[name]
+                         break
+                 
+                 if found_ts:
+                     df_new.rename(columns={found_ts: 'timestamp'}, inplace=True)
                      df_new['timestamp'] = pd.to_datetime(df_new['timestamp'], errors='coerce')
                      df_new.dropna(subset=['timestamp'], inplace=True)
                  else:
@@ -438,10 +456,19 @@ elif st.session_state['current_page'] == "Model Training / Exploration":
             except:
                 df = pd.read_csv(uploaded_file)
             
-            cols_lower = [c.lower() for c in df.columns]
-            if 'timestamp' in cols_lower:
-                ts_col = df.columns[cols_lower.index('timestamp')]
-                df.rename(columns={ts_col: 'timestamp'}, inplace=True)
+            # Strip whitespace
+            df.columns = df.columns.str.strip()
+            
+            cols_lower = {c.lower(): c for c in df.columns}
+            possible_names = ['timestamp', 'date', 'time', 'datetime']
+            found_ts = None
+            for name in possible_names:
+                if name in cols_lower:
+                    found_ts = cols_lower[name]
+                    break
+            
+            if found_ts:
+                df.rename(columns={found_ts: 'timestamp'}, inplace=True)
                 df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
                 df.dropna(subset=['timestamp'], inplace=True)
             else:
@@ -459,7 +486,19 @@ elif st.session_state['current_page'] == "Model Training / Exploration":
                      if use_sample:
                          selected_file = st.selectbox("Select Sample File", csv_files)
                          df = pd.read_csv(os.path.join(data_dir, selected_file), sep=None, engine='python')
-                         if 'timestamp' in df.columns: 
+                         # Strip whitespace
+                         df.columns = df.columns.str.strip()
+                         
+                         cols_lower = {c.lower(): c for c in df.columns}
+                         possible_names = ['timestamp', 'date', 'time', 'datetime']
+                         found_ts = None
+                         for name in possible_names:
+                             if name in cols_lower:
+                                 found_ts = cols_lower[name]
+                                 break
+                                 
+                         if found_ts:
+                             df.rename(columns={found_ts: 'timestamp'}, inplace=True)
                              df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
                          st.session_state['shared_df'] = df
 

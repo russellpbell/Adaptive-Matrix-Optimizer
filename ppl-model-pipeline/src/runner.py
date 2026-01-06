@@ -46,8 +46,8 @@ def train(args):
     # Strategy: Pass a temp config yaml for training too? Or just JSON string.
     # Let's assume args.input_cols is a string "col1,col2"
     
-    input_cols = args.input_cols.split(',') if args.input_cols else []
-    output_cols = args.output_cols.split(',') if args.output_cols else []
+    input_cols = [c.strip() for c in args.input_cols.split(',')] if args.input_cols else []
+    output_cols = [c.strip() for c in args.output_cols.split(',')] if args.output_cols else []
     
     # Callback
     def pipeline_callback(msg, step, total):
