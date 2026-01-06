@@ -2,7 +2,8 @@ pandas
 numpy<2.0.0
 scipy
 pyts
-# tensorflow  <-- Installed manually (tensorflow-macos) to avoid conflicts
+# Install standard TensorFlow on Linux (Streamlit Cloud), skip on Mac (use manual tensorflow-macos)
+tensorflow==2.15.0; sys_platform != 'darwin'
 keras==2.15.0
 ml-dtypes==0.2.0
 protobuf<5.0.0
