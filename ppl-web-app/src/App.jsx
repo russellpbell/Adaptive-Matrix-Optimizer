@@ -37,16 +37,16 @@ function App() {
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Protected Routes with Layout */}
-            <Route path="/new-variable" element={<RequireAuth><Layout><NewVariable /></Layout></RequireAuth>} />
-            <Route path="/variable/:tag" element={<RequireAuth><Layout><VariableDetails /></Layout></RequireAuth>} />
-            <Route path="/settings" element={<RequireAuth><Layout><AccountSettings /></Layout></RequireAuth>} />
-            <Route path="/monitoring" element={<RequireAuth><Layout><Monitoring /></Layout></RequireAuth>} />
-            <Route path="/model-search" element={<RequireAuth><Layout><ModelSearch /></Layout></RequireAuth>} />
-            <Route path="/models/:id" element={<RequireAuth><Layout><ModelEvaluation /></Layout></RequireAuth>} />
+            {/* Protected Routes with Layout - Auth bypassed */}
+            <Route path="/new-variable" element={<Layout><NewVariable /></Layout>} />
+            <Route path="/variable/:tag" element={<Layout><VariableDetails /></Layout>} />
+            <Route path="/settings" element={<Layout><AccountSettings /></Layout>} />
+            <Route path="/monitoring" element={<Layout><Monitoring /></Layout>} />
+            <Route path="/model-search" element={<Layout><ModelSearch /></Layout>} />
+            <Route path="/models/:id" element={<Layout><ModelEvaluation /></Layout>} />
 
-            {/* Subscription Route (Wrapped in Layout or Standalone? Let's keep it standalone for now or Layout) */}
-            <Route path="/subscription" element={<RequireAuth><Layout><Subscription /></Layout></RequireAuth>} />
+            {/* Subscription Route */}
+            <Route path="/subscription" element={<Layout><Subscription /></Layout>} />
           </Routes>
         </div>
       </Router>

@@ -325,7 +325,7 @@ class PPLPipeline:
         log("   Calculating SHAP explanations...", 6)
         try:
             # Use simpler sample size for SHAP as it is expensive
-            self.shap_df = calculate_shap_feature_importance(self.model, self.X_windows, input_cols, output_cols, num_samples=min(shap_samples, n_windows))
+            self.shap_df = calculate_shap_feature_importance(self.model, self.X_windows, input_cols, output_cols, num_samples=min(shap_samples, n_windows), status_callback=lambda msg: log(msg, step=6))
             shap_csv_path = os.path.join(current_output_dir, 'shap_values.csv')
             self.shap_df.to_csv(shap_csv_path, index=False)
         except Exception as e:
@@ -362,16 +362,77 @@ class PPLPipeline:
         log("Pipeline Run Complete.", 6) # Finish
         
         # Return Comprehensive Results
+        # --- Post-Processing: Inverse Transform Results for User Consumption ---
+        log("   Inverse transforming results to original scale...", 6)
+        
+        # 1. Main Data Arrays
+        X_windows_orig = self.inverse_transform(self.X_windows, input_cols)
+        y_ts_orig = self.inverse_transform(self.y_ts, output_cols)
+        y_pred_orig = self.inverse_transform(y_pred, output_cols)
+        
+        # 2. SHAP Values & Feature Values
+        if not self.shap_df.empty:
+            # A. Fix Feature Values (Inputs)
+            # Calculate mean of original input windows
+            mean_inputs_orig = np.mean(X_windows_orig, axis=1) # (N, n_in)
+            
+            # Create a localized lookup DF
+            temp_df = pd.DataFrame(mean_inputs_orig, columns=input_cols)
+            temp_df['Sample_ID'] = np.arange(len(temp_df))
+            melted = temp_df.melt(id_vars='Sample_ID', var_name='Feature', value_name='Feature_Value_Orig')
+            
+            # Merge to update Feature_Value
+            self.shap_df = self.shap_df.merge(melted, on=['Sample_ID', 'Feature'], how='left')
+            self.shap_df['Feature_Value'] = self.shap_df['Feature_Value_Orig']
+            self.shap_df.drop(columns=['Feature_Value_Orig'], inplace=True)
+            
+            # B. Fix SHAP Values (Scale up by Output Range)
+            # SHAP is Delta Y. Y = Y_scaled * Range + Min. Delta Y = Delta Y_scaled * Range.
+            cols_indices = {c: i for i, c in enumerate(self.feature_cols)}
+            
+            # We iterate over Unique Outputs in SHAP DF to apply specific scaling
+            for out_name in output_cols:
+                if out_name in cols_indices:
+                    idx = cols_indices[out_name]
+                    # Check if scaler is fitted
+                    if hasattr(self.scaler, 'data_range_'):
+                         rng = self.scaler.data_range_[idx]
+                         # Apply to rows where Output_Name == out_name
+                         mask = self.shap_df['Output_Name'] == out_name
+                         self.shap_df.loc[mask, 'SHAP_Value'] *= rng
+            
+            # Resave SHAP with corrected values
+            if shap_csv_path:
+                 self.shap_df.to_csv(shap_csv_path, index=False)
+
+        # 3. LIME Context Data (Inputs)
+        if context_data:
+             # Update Input_X values in the list of dicts
+             mean_inputs_orig = np.mean(X_windows_orig, axis=1) # (N, n_in)
+             # context_data is a list of dicts, each has 'Sample_ID'
+             for row in context_data:
+                 sid = row['Sample_ID']
+                 if sid < len(mean_inputs_orig):
+                     vals = mean_inputs_orig[sid]
+                     for i, name in enumerate(input_cols):
+                         if f"Input_{name}" in row:
+                             row[f"Input_{name}"] = vals[i]
+             
+             # Resave context data
+             if context_csv_path:
+                 pd.DataFrame(context_data).to_csv(context_csv_path, index=False)
+        
+        # Return Comprehensive Results (Unscaled)
         return {
             'history': history,
             'mse': mse,
             'mae': mae,
-            'y_true': self.y_ts,
-            'y_pred': y_pred,
+            'y_true': y_ts_orig,
+            'y_pred': y_pred_orig,
             'lime_importances': self.lime_importances_df,
             'shap_values': self.shap_df,
             'context_data': context_data,
-            'X_windows': self.X_windows,
+            'X_windows': X_windows_orig,
             'config': config,
             'output_dir': current_output_dir,
             'paths': {
@@ -508,20 +569,58 @@ class PPLPipeline:
         self.lime_importances_df = pd.DataFrame(rows) if rows else pd.DataFrame(columns=['Feature', 'Importance', 'Output_Name'])
 
         log("Running SHAP Explanation...", 3)
-        self.shap_df = calculate_shap_feature_importance(self.model, self.X_windows, input_cols, output_cols, num_samples=min(shap_samples, n_windows))
+        self.shap_df = calculate_shap_feature_importance(self.model, self.X_windows, input_cols, output_cols, num_samples=min(shap_samples, n_windows), status_callback=lambda msg: log(msg, step=3))
 
         # Return Results (Matching run())
         log("Evaluation Complete", 5)
+        # --- Post-Processing: Inverse Transform Results ---
+        log("Inverse transforming evaluation results...", 4)
+        X_windows_orig = self.inverse_transform(self.X_windows, input_cols)
+        y_ts_orig = self.inverse_transform(self.y_ts, output_cols)
+        y_pred_orig = self.inverse_transform(y_pred, output_cols)
+        
+        # SHAP Corrections
+        if not self.shap_df.empty:
+            mean_inputs_orig = np.mean(X_windows_orig, axis=1)
+            
+            temp_df = pd.DataFrame(mean_inputs_orig, columns=input_cols)
+            temp_df['Sample_ID'] = np.arange(len(temp_df))
+            melted = temp_df.melt(id_vars='Sample_ID', var_name='Feature', value_name='Feature_Value_Orig')
+            
+            self.shap_df = self.shap_df.merge(melted, on=['Sample_ID', 'Feature'], how='left')
+            self.shap_df['Feature_Value'] = self.shap_df['Feature_Value_Orig']
+            self.shap_df.drop(columns=['Feature_Value_Orig'], inplace=True)
+            
+            cols_indices = {c: i for i, c in enumerate(self.feature_cols)}
+            if hasattr(self.scaler, 'data_range_'):
+                for out_name in output_cols:
+                    if out_name in cols_indices:
+                        idx = cols_indices[out_name]
+                        rng = self.scaler.data_range_[idx]
+                        mask = self.shap_df['Output_Name'] == out_name
+                        self.shap_df.loc[mask, 'SHAP_Value'] *= rng
+                        
+        # LIME Corrections
+        if context_data:
+             mean_inputs_orig = np.mean(X_windows_orig, axis=1)
+             for row in context_data:
+                 sid = row['Sample_ID']
+                 if sid < len(mean_inputs_orig):
+                     vals = mean_inputs_orig[sid]
+                     for i, name in enumerate(input_cols):
+                         if f"Input_{name}" in row:
+                             row[f"Input_{name}"] = vals[i]
+
         return {
-            'history': None, # No history for loaded model
+            'history': None,
             'mse': mse,
             'mae': mae,
-            'y_true': self.y_ts,
-            'y_pred': y_pred,
+            'y_true': y_ts_orig,
+            'y_pred': y_pred_orig,
             'lime_importances': self.lime_importances_df,
             'shap_values': self.shap_df,
             'context_data': context_data,
-            'X_windows': self.X_windows,
+            'X_windows': X_windows_orig,
             'config': config,
             'output_dir': current_output_dir
         }

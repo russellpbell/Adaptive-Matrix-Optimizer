@@ -54,7 +54,7 @@ from lime import lime_tabular
 import shap
 from src.encoding import create_multichannel_image
 
-def calculate_shap_feature_importance(model, X_windows, feature_names, output_names, num_samples=50):
+def calculate_shap_feature_importance(model, X_windows, feature_names, output_names, num_samples=50, status_callback=None):
     """
     Calculate SHAP values for each input feature towards each output variable.
     Returns structured DataFrame for Visualization.
@@ -68,6 +68,10 @@ def calculate_shap_feature_importance(model, X_windows, feature_names, output_na
     
     shap_results = []
     
+    total_samples = min(num_samples, len(X_flat))
+    if status_callback:
+        status_callback(f"Initializing SHAP Explainer ({total_samples} samples)...")
+        
     for out_idx, out_name in enumerate(output_names):
         def predict_wrapper(flat_data):
             # Same wrapper as LIME
@@ -80,30 +84,49 @@ def calculate_shap_feature_importance(model, X_windows, feature_names, output_na
                 imgs.append(img[0])
             imgs = np.array(imgs)
             preds = model.predict(imgs, verbose=0)
-            mean_preds = np.mean(preds, axis=1) # (n, n_outputs) -> average across time? 
-            # Actually model outputs (n, window, n_out).
-            # We need scalar for SHAP per sample? 
-            # Or we can explain the MEAN output over the window.
-            # Usually we care about the impact on the target values. 
-            # Let's take the mean of the window predictions for this output variable.
+            mean_preds = np.mean(preds, axis=1) 
             return mean_preds[:, out_idx]
 
         # Use KernelExplainer
         explainer = shap.KernelExplainer(predict_wrapper, background_data)
         
-        # Explain samples
-        samples_to_explain = X_flat[:min(num_samples, len(X_flat))]
-        shap_values = explainer.shap_values(samples_to_explain, nsamples=100) # (n_samples, n_features_flat)
+        # Explain samples iteratively to report progress
+        samples_to_explain = X_flat[:total_samples]
         
-        # Provide progress or silence? KernelExplainer is verbose.
+        # Collect shap values for all samples for this output
+        # shape: (n_samples, n_features_flat)
+        output_shap_values = []
+        
+        for i in range(total_samples):
+            # Report Progress
+            # We have len(output_names) outputs. 
+            # Current progress = (out_idx * total_samples) + i
+            # Total steps = len(output_names) * total_samples
+            overall_current = (out_idx * total_samples) + i + 1
+            overall_total = len(output_names) * total_samples
+            percent = int((overall_current / overall_total) * 100)
+            
+            if status_callback:
+                status_callback(f"SHAP Explaining: {overall_current}/{overall_total} ({percent}%) - Output: {out_name}")
+            
+            # Explain single instance (reshape to 2D for shap)
+            # exp_val is list of arrays? No, KernelExplainer for scalar output returns array.
+            # nsamples=100 is low but fast for UI.
+            val = explainer.shap_values(samples_to_explain[i:i+1], nsamples=100) 
+            # val is (1, n_features_flat) or list if multi-output (but we wrapper for single output)
+            
+            if isinstance(val, list):
+                output_shap_values.append(val[0])
+            else:
+                output_shap_values.append(val)
+                
+        # Concatenate
+        combined_shap = np.vstack(output_shap_values) # (N, Win*Feat)
         
         # Aggregate SHAP values back to Feature Level (Sum across time window)
-        # shap_values is (N, Win*Feat)
-        n_ex = samples_to_explain.shape[0]
-        
-        for i in range(n_ex):
+        for i in range(total_samples):
             # X_flat[i] corresponds to sample i
-            row_shap = shap_values[i] # (Win*Feat,)
+            row_shap = combined_shap[i] # (Win*Feat,)
             sample_in = X_flat[i]     # (Win*Feat,)
             
             # Reshape to (Window, Feat)

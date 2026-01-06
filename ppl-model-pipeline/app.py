@@ -1242,6 +1242,13 @@ elif st.session_state['current_page'] == "Model Training / Exploration":
                     
                     # Filter by output first
                     outputs = shap_df['Output_Name'].unique()
+                    
+                    # Add Output Selector
+                    selected_output = st.selectbox("Select Target Output to Explain", outputs, key="shap_output_select")
+                    
+                    # Filter data for the selected output
+                    shap_df_filtered = shap_df[shap_df['Output_Name'] == selected_output].copy()
+                    
                      # We need to capture selection from ANY chart.
                     # Streamlit reruns on selection. We check for returned selection data.
                     
@@ -1249,13 +1256,8 @@ elif st.session_state['current_page'] == "Model Training / Exploration":
                     current_selection_sample_ids = set()
                     
                     for i, feat in enumerate(inputs):
-                        # Filter by the selected feature and the current output
-                        # We need to iterate over outputs as well, or combine them.
-                        # For now, let's just show all outputs for each feature.
-                        # This means the plot will have multiple SHAP values for the same feature_value if there are multiple outputs.
-                        # This is usually handled by faceting or selecting one output.
-                        # Given the removal of output selection, we'll plot all outputs for each feature.
-                        feat_df = shap_df[shap_df['Feature'] == feat].copy()
+                        # Filter by the selected feature AND the selected output (already filtered)
+                        feat_df = shap_df_filtered[shap_df_filtered['Feature'] == feat].copy()
                         
                         # Color logic
                         if not selected_global_ids:
