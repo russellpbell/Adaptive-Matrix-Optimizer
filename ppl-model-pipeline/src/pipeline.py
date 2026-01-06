@@ -153,7 +153,19 @@ class PPLPipeline:
             if found_ts:
                 df.rename(columns={found_ts: 'timestamp'}, inplace=True)
             else:
-                df['timestamp'] = pd.date_range(start='2023-01-01', periods=len(df), freq='3min')
+                # Force first column as timestamp
+                first_col = df.columns[0]
+                print(f"Warning: No explicit timestamp column found. Using first column '{first_col}' as timestamp.")
+                df.rename(columns={first_col: 'timestamp'}, inplace=True)
+                # Parse
+                df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+                if df['timestamp'].isna().mean() > 0.5:
+                     # If mostly NaT, then fallback to index
+                     print("First column failed parsing as datetime. Using index.")
+                     df['timestamp'] = pd.date_range(start='2023-01-01', periods=len(df), freq='3min')
+                else:
+                     # Valid timestamp
+                     pass
 
         # Apply Data Quality & Anomaly Detection
         # Ensure all non-timestamp columns are numeric
@@ -275,39 +287,53 @@ class PPLPipeline:
         plot_error_distribution(self.y_ts, y_pred, output_names=output_cols, save_path=os.path.join(current_output_dir, 'error_dist.png'))
         
         log("6. Interpretability (LIME)...", 6)
-        context_data, self.lime_importances = calculate_lime_feature_importance(self.model, self.X_windows, input_cols, output_cols, num_samples=min(lime_samples, n_windows))
         
-        # Save static plot
-        plot_lime_violin(self.lime_importances, save_path=os.path.join(current_output_dir, 'lime_violin.png'))
-        
-        # Convert LIME dict to DataFrame for App/Controller
-        rows = []
-        for out_name, feats in self.lime_importances.items():
-            for feat_name, weights in feats.items():
-                for w in weights:
-                    rows.append({
-                        'Feature': feat_name,
-                        'Importance': w,
-                        'Output_Name': out_name
-                    })
-        self.lime_importances_df = pd.DataFrame(rows) if rows else pd.DataFrame(columns=['Feature', 'Importance', 'Output_Name'])
+        try:
+            context_data, self.lime_importances = calculate_lime_feature_importance(self.model, self.X_windows, input_cols, output_cols, num_samples=min(lime_samples, n_windows))
+            
+            # Save static plot
+            plot_lime_violin(self.lime_importances, save_path=os.path.join(current_output_dir, 'lime_violin.png'))
+            
+            # Convert LIME dict to DataFrame for App/Controller
+            rows = []
+            for out_name, feats in self.lime_importances.items():
+                for feat_name, weights in feats.items():
+                    for w in weights:
+                        rows.append({
+                            'Feature': feat_name,
+                            'Importance': w,
+                            'Output_Name': out_name
+                        })
+            self.lime_importances_df = pd.DataFrame(rows) if rows else pd.DataFrame(columns=['Feature', 'Importance', 'Output_Name'])
 
-        # Save LIME Context Data for Controller
-        context_df = pd.DataFrame(context_data)
-        context_csv_path = os.path.join(current_output_dir, 'lime_context_data.csv')
-        context_df.to_csv(context_csv_path, index=False)
+            # Save LIME Context Data for Controller
+            context_df = pd.DataFrame(context_data)
+            context_csv_path = os.path.join(current_output_dir, 'lime_context_data.csv')
+            context_df.to_csv(context_csv_path, index=False)
+            log(f"LIME context data saved to {context_csv_path}")
+            
+        except Exception as e:
+            log(f"LIME Explanation Failed (Skipping): {e}", 6)
+            import traceback
+            traceback.print_exc()
+            self.lime_importances = {}
+            self.lime_importances_df = pd.DataFrame(columns=['Feature', 'Importance', 'Output_Name'])
+            context_data = None
+            context_csv_path = None
+
         # Calculate SHAP
         log("   Calculating SHAP explanations...", 6)
-        # Use simpler sample size for SHAP as it is expensive
-        self.shap_df = calculate_shap_feature_importance(self.model, self.X_windows, input_cols, output_cols, num_samples=min(shap_samples, n_windows))
-        shap_csv_path = os.path.join(current_output_dir, 'shap_values.csv')
-        self.shap_df.to_csv(shap_csv_path, index=False)
-        
-        # Save LIME Context Data for Controller
-        context_df = pd.DataFrame(context_data)
-        context_csv_path = os.path.join(current_output_dir, 'lime_context_data.csv')
-        context_df.to_csv(context_csv_path, index=False)
-        log(f"LIME context data saved to {context_csv_path}")
+        try:
+            # Use simpler sample size for SHAP as it is expensive
+            self.shap_df = calculate_shap_feature_importance(self.model, self.X_windows, input_cols, output_cols, num_samples=min(shap_samples, n_windows))
+            shap_csv_path = os.path.join(current_output_dir, 'shap_values.csv')
+            self.shap_df.to_csv(shap_csv_path, index=False)
+        except Exception as e:
+            log(f"SHAP Explanation Failed (Skipping): {e}", 6)
+            import traceback
+            traceback.print_exc()
+            self.shap_df = pd.DataFrame()
+            shap_csv_path = None
         
         # Save Model
         model_path = os.path.join(current_output_dir, 'ppl_model.keras')

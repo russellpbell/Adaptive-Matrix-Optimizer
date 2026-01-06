@@ -261,13 +261,21 @@ if st.session_state['current_page'] == "Data Exploration":
                     found_ts = cols_lower[name]
                     break
             
-            if found_ts:
                 df.rename(columns={found_ts: 'timestamp'}, inplace=True)
                 df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
                 df.dropna(subset=['timestamp'], inplace=True)
             else:
-                st.warning("No 'timestamp' column found. Index will be used.")
-                df['timestamp'] = pd.date_range(start='2023-01-01', periods=len(df), freq='1H')
+                # Force first column as timestamp
+                first_col = df.columns[0]
+                df.rename(columns={first_col: 'timestamp'}, inplace=True)
+                df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+                # If conversion fails for many, fallback to index
+                if df['timestamp'].isna().mean() > 0.5:
+                     st.warning("First column could not be parsed as timestamp. Index will be used.")
+                     df['timestamp'] = pd.date_range(start='2023-01-01', periods=len(df), freq='1h')
+                else:
+                     st.info(f"Using first column '{first_col}' as timestamp.")
+                     df.dropna(subset=['timestamp'], inplace=True)
             
             st.session_state['shared_df'] = df
             st.rerun()
@@ -298,8 +306,15 @@ if st.session_state['current_page'] == "Data Exploration":
                      df_new['timestamp'] = pd.to_datetime(df_new['timestamp'], errors='coerce')
                      df_new.dropna(subset=['timestamp'], inplace=True)
                  else:
-                     st.warning("No 'timestamp' column found. Index will be used.")
-                     df_new['timestamp'] = pd.date_range(start='2023-01-01', periods=len(df_new), freq='1H')
+                     # Force first column
+                     first_col = df_new.columns[0]
+                     df_new.rename(columns={first_col: 'timestamp'}, inplace=True)
+                     df_new['timestamp'] = pd.to_datetime(df_new['timestamp'], errors='coerce')
+                     if df_new['timestamp'].isna().mean() > 0.5:
+                         st.warning("First column could not be parsed as timestamp. Index will be used.")
+                         df_new['timestamp'] = pd.date_range(start='2023-01-01', periods=len(df_new), freq='1h')
+                     else:
+                         df_new.dropna(subset=['timestamp'], inplace=True)
                  
                  st.session_state['shared_df'] = df_new
                  st.session_state['bad_data_rules'] = [] # Reset rules on new data
@@ -472,8 +487,15 @@ elif st.session_state['current_page'] == "Model Training / Exploration":
                 df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
                 df.dropna(subset=['timestamp'], inplace=True)
             else:
-                 st.warning("No 'timestamp' column found. Index will be used.")
-                 df['timestamp'] = pd.date_range(start='2023-01-01', periods=len(df), freq='1H')
+                 # Force first column
+                 first_col = df.columns[0]
+                 df.rename(columns={first_col: 'timestamp'}, inplace=True)
+                 df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+                 if df['timestamp'].isna().mean() > 0.5:
+                     st.warning("First column could not be parsed as timestamp. Index will be used.")
+                     df['timestamp'] = pd.date_range(start='2023-01-01', periods=len(df), freq='1h')
+                 else:
+                     df.dropna(subset=['timestamp'], inplace=True)
             
             st.session_state['shared_df'] = df
             st.success(f"Loaded data: {df.shape}")
@@ -499,6 +521,11 @@ elif st.session_state['current_page'] == "Model Training / Exploration":
                                  
                          if found_ts:
                              df.rename(columns={found_ts: 'timestamp'}, inplace=True)
+                             df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+                         else:
+                             # Force first column
+                             first_col = df.columns[0]
+                             df.rename(columns={first_col: 'timestamp'}, inplace=True)
                              df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
                          st.session_state['shared_df'] = df
 
