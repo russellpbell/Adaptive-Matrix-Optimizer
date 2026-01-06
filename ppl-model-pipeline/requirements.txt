@@ -2,12 +2,16 @@ pandas
 numpy<2.0.0
 scipy
 pyts
-# Install standard TensorFlow on Linux (Streamlit Cloud), skip on Mac (use manual tensorflow-macos)
-tensorflow==2.15.0; sys_platform != 'darwin'
-keras==2.15.0
-ml-dtypes==0.2.0
-protobuf<5.0.0
-tensorboard==2.15.2
+# --- Mac Strict Pins (M1/ARM64 Stability) ---
+keras==2.15.0; sys_platform == 'darwin'
+ml-dtypes==0.2.0; sys_platform == 'darwin'
+protobuf<5.0.0; sys_platform == 'darwin'
+tensorboard==2.15.2; sys_platform == 'darwin'
+
+# --- Linux/Cloud (Python 3.13+ Support) ---
+# Allow newer versions on Linux to support Python 3.13
+tensorflow>=2.20.0; sys_platform != 'darwin' 
+# Let pip resolve keras/tensorboard for TF 2.20+ automatically on Linux
 lime
 matplotlib
 seaborn
