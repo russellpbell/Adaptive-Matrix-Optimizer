@@ -116,7 +116,7 @@ div.stButton > button {
 </style>
 
 <div class="landing-card">
-<h1 class="landing-title">Adaptive Matrix Optimization</h1>
+<h1 class="landing-title">Adaptive Matrix Optimizer</h1>
 <h3 class="landing-subtitle">Next-Generation Open-Loop Optimizer for Industrial Systems</h3>
 
 <div class="landing-content">
@@ -226,7 +226,7 @@ Upload your timeseries data and our advanced modeling and optimization engine wi
 # # Clear marketing text after login
 # intro_text.empty()
 
-st.markdown("<h1 style='text-align: center;'>Adaptive Matrix Optimization</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>Adaptive Matrix Optimizer</h1>", unsafe_allow_html=True)
 
 # Navigation
 # Navigation State
@@ -549,8 +549,9 @@ elif st.session_state['current_page'] == "Model Training / Exploration":
             if not os.path.exists(resolved_parent):
                 os.makedirs(resolved_parent, exist_ok=True)
                 
-            st.write("**Output Directory**")
-            st.info(f"Artifacts will be saved to: `../output/{run_name}`")
+            # Output Directory Hidden
+            # st.write("**Output Directory**")
+            # st.info(f"Artifacts will be saved to: `../output/{run_name}`")
             final_output_path = os.path.join(resolved_parent, run_name)
     
             # Helper for running subprocess
@@ -1242,11 +1243,11 @@ elif st.session_state['current_page'] == "Model Training / Exploration":
                         mime="application/zip"
                     )
     else:
-        st.info("Please upload a CSV file or select sample data to proceed.")
+        st.info("Please upload a CSV file to proceed.")
 
 # --- PAGE 3: Controller ---
 elif st.session_state['current_page'] == "Optimization":
-    st.header("PPL Optimizer")
+    st.header("Optimizer")
     
     st.subheader("Setup & Upload")
     
@@ -1455,9 +1456,8 @@ elif st.session_state['current_page'] == "Optimization":
     st.divider()
     
     # 3. Control Loop
-    st.subheader("Simulation & Control")
-    
     if st.session_state['controller']:
+        st.subheader("Simulation & Control")
         # Simulation Controls
         col_c1, col_c2 = st.columns([0.5, 0.5])
         
